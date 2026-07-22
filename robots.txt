@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dgxs.hnchpower.cn/sitemap.xml
