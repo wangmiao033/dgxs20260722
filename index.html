@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="帝国雄狮玩家攻略百科：英雄图鉴、技能说明、玩法攻略、等级开放和活动日历。">
-  <title>帝国雄狮攻略百科</title>
+  <meta name="description" content="帝国雄狮玩家攻略百科：七日开荒、英雄配队、技能搭配、主殿解锁、资源规划与开服活动。">
+  <meta name="theme-color" content="#0873c5">
+  <title>帝国雄狮攻略百科｜深度版 V2</title>
   <style>
     html,body{height:100%;margin:0;background:#07121f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
-    .loading{height:100%;display:grid;place-items:center;text-align:center}
-    .loading b{font-size:22px}.loading p{color:#9bb1c7}
+    .loading{height:100%;display:grid;place-items:center;text-align:center}.loading b{font-size:22px}.loading p{color:#9bb1c7}
   </style>
 </head>
 <body>
-  <div class="loading"><div><b>帝国雄狮攻略百科</b><p>正在载入百科资料…</p></div></div>
+  <div class="loading"><div><b>帝国雄狮攻略百科 · 深度版</b><p>正在载入英雄、技能与攻略工具…</p></div></div>
   <script src="payload/chunk-01.js"></script>
   <script src="payload/chunk-02.js"></script>
   <script src="payload/chunk-03.js"></script>
@@ -23,19 +23,12 @@
   <script src="payload/chunk-08.js"></script>
   <script src="payload/chunk-09.js"></script>
   <script>
-    (async()=>{
-      try{
-        const raw=atob(window.__DGXS_PAYLOAD||'');
-        const bytes=new Uint8Array(raw.length);
-        for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
-        if(!('DecompressionStream' in window)) throw new Error('当前浏览器版本过低，请升级后访问。');
-        const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-        const html=await new Response(stream).text();
-        document.open(); document.write(html); document.close();
-      }catch(err){
-        document.body.innerHTML='<div class="loading"><div><b>页面载入失败</b><p>'+String(err.message||err)+'</p></div></div>';
-      }
-    })();
+    (async()=>{try{
+      const raw=atob(window.__DGXS_PAYLOAD||'');
+      const bytes=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+      if(!('DecompressionStream' in window)) throw new Error('当前浏览器版本过低，请升级后访问。');
+      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+      const html=await new Response(stream).text(); document.open(); document.write(html); document.close();
+    }catch(err){document.body.innerHTML='<div class="loading"><div><b>页面载入失败</b><p>'+String(err.message||err)+'</p></div></div>';}})();
   </script>
-</body>
-</html>
+</body></html>
