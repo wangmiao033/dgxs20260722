@@ -1,0 +1,66 @@
+name: Decode Hero Icons
+
+on:
+  push:
+    branches:
+      - hero-extract-work
+    paths:
+      - ".github/workflows/decode-hero-icons.yml"
+      - "tools/decode_astc.cpp"
+      - "tools/convert_hero_icons.py"
+      - "hero_payload/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout extraction branch
+        uses: actions/checkout@v4
+
+      - name: Restore ASTC source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p hero_work
+          cat hero_payload/chunk-*.txt | base64 --decode > /tmp/hero-icons.tar.gz
+          tar -xzf /tmp/hero-icons.tar.gz -C hero_work
+          find hero_work -maxdepth 3 -type f | head -20
+
+      - name: Build Google ASTC decoder
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/google/astc-codec.git third_party/astc-codec
+          cmake -S third_party/astc-codec -B build/astc \
+            -DOPTION_ASTC_TESTS=OFF \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/astc --parallel 2
+          g++ -std=c++17 -O2 tools/decode_astc.cpp \
+            -Ithird_party/astc-codec/include \
+            -Ithird_party/astc-codec \
+            -Lbuild/astc/src/decoder \
+            -lastc-codec -lastc_utils -lfootprint \
+            -o build/decode_astc
+          ./build/decode_astc 2>&1 || true
+
+      - name: Decode hero icon textures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check pillow
+          python3 tools/convert_hero_icons.py
+          find hero_output -maxdepth 2 -type f | sort | head -30
+
+      - name: Upload decoded hero PNGs
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-icons-png
+          path: hero_output
+          if-no-files-found: error
+          retention-days: 14
