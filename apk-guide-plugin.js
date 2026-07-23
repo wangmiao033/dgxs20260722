@@ -11,6 +11,7 @@
   const right = () => $('#rightSidebar');
   const careerOrder = {格斗:1,博学:2,均衡:3};
   const qualityName = {1:'普通',2:'稀有',3:'史诗',4:'传说',5:'神话'};
+  const guideHeroNames = new Set((window.WIKI_DATA?.entries || []).filter(e=>e.category==='英雄图鉴').map(e=>e.title));
   const heroAvatarIds = new Set('1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,3001,3002,3003,3004,3005,4001,4002,4003,4004,4005,4006,4007,4008,4010,9001,9005,9020,9021,9022,9103,9110,9117,9119,9121,9122,9123,9124,9125,9127,9998,9999'.split(','));
   const heroPortraitIds = new Set('1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,3001,3002,3003,3004,3005,4001,4002,4003,4004,4005,4006,4007,4008,4010,9001,9004,9005,9020,9021,9022,9101,9102,9103,9125'.split(','));
 
@@ -59,6 +60,21 @@
     group.appendChild(a);
   }
 
+  function syncHeroCatalogLinks() {
+    document.querySelectorAll('a[href^="#category/"]').forEach(a => {
+      if (!a.textContent.includes('英雄图鉴')) return;
+      a.href = '#apk/heroes';
+      const count = a.querySelector('.count');
+      if (count) count.textContent = D.meta.counts.heroes;
+    });
+    document.querySelectorAll('.info-table tr').forEach(row => {
+      if (row.querySelector('th')?.textContent.trim() === '英雄 / 技能') {
+        const cell = row.querySelector('td');
+        if (cell) cell.textContent = `${D.meta.counts.heroes} / ${D.meta.counts.skills}`;
+      }
+    });
+  }
+
   const tabDefs = [
     ['heroes','英雄档案'],['skills','技能大全'],['functions','功能开放'],['tech','科技树'],['calendar','日程赛季'],['copies','章节副本'],['bonds','英雄羁绊'],['catalog','道具任务']
   ];
@@ -70,12 +86,12 @@
   }
 
   function heroCards(list) {
-    return `<div class="apk-grid">${list.map(h=>`<a class="apk-card" href="#apk/hero/${h.id}"><div class="apk-card-top"><span class="apk-tag">${esc(h.class)}</span><span class="apk-tag">ID ${h.id}</span><span class="apk-quality">${qualityName[h.quality]||('品质'+h.quality)}</span></div><div class="apk-card-identity"><div class="apk-card-avatar">${heroImage(h)}</div><div><h3>${esc(h.name)}${h.subtitle?` <small>· ${esc(h.subtitle)}</small>`:''}</h3><p>${esc(h.position || h.desc || '游戏内英雄档案')}</p></div></div><div class="apk-attrs"><span>力量<b>${h.attrs.force}</b></span><span>智力<b>${h.attrs.wisdom}</b></span><span>魅力<b>${h.attrs.charm}</b></span><span>统率<b>${h.attrs.leadership}</b></span></div></a>`).join('')}</div>`;
+    return `<div class="apk-grid">${list.map(h=>`<a class="apk-card" href="#apk/hero/${h.id}"><div class="apk-card-top"><span class="apk-tag">${esc(h.class)}</span><span class="apk-tag">ID ${h.id}</span>${guideHeroNames.has(h.name)?'<span class="apk-tag">已有攻略</span>':''}<span class="apk-quality">${qualityName[h.quality]||('品质'+h.quality)}</span></div><div class="apk-card-identity"><div class="apk-card-avatar">${heroImage(h)}</div><div><h3>${esc(h.name)}${h.subtitle?` <small>· ${esc(h.subtitle)}</small>`:''}</h3><p>${esc(h.position || h.desc || '游戏内英雄档案')}</p></div></div><div class="apk-attrs"><span>力量<b>${h.attrs.force}</b></span><span>智力<b>${h.attrs.wisdom}</b></span><span>魅力<b>${h.attrs.charm}</b></span><span>统率<b>${h.attrs.leadership}</b></span></div></a>`).join('')}</div>`;
   }
 
   function renderHeroes() {
     const list=[...D.heroes].sort((a,b)=>(careerOrder[a.class]||9)-(careerOrder[b.class]||9)||b.quality-a.quality||a.id-b.id);
-    main().innerHTML=pageHead('heroes')+`<div class="apk-tools"><input id="apkSearch" placeholder="搜索英雄名称、称号、定位或故事关键词"><select id="apkClass"><option>全部职业</option><option>格斗</option><option>博学</option><option>均衡</option></select><span class="apk-result-count" id="apkCount">${list.length} 名英雄</span></div><div id="apkResults">${heroCards(list)}</div>`;
+    main().innerHTML=pageHead('heroes')+`<div class="apk-tools"><input id="apkSearch" placeholder="搜索英雄名称、称号、定位或故事关键词"><select id="apkClass"><option>全部职业</option><option>格斗</option><option>博学</option><option>均衡</option></select><span class="apk-result-count" id="apkCount">${list.length} 名英雄 · ${guideHeroNames.size} 篇配队攻略</span></div><div id="apkResults">${heroCards(list)}</div>`;
     const apply=()=>{const q=$('#apkSearch').value.trim().toLowerCase(),cl=$('#apkClass').value;const r=list.filter(h=>(cl==='全部职业'||h.class===cl)&&(!q||[h.name,h.subtitle,h.position,h.analysis,h.desc,h.story].join(' ').toLowerCase().includes(q)));$('#apkResults').innerHTML=r.length?heroCards(r):'<div class="apk-empty">没有匹配的英雄</div>';$('#apkCount').textContent=`${r.length} 名英雄`;};
     $('#apkSearch').addEventListener('input',apply);$('#apkClass').addEventListener('change',apply);
   }
@@ -111,9 +127,11 @@
   function renderCatalog(){main().innerHTML=pageHead('catalog');loadCatalog(()=>{const C=window.APK_GUIDE_CATALOG;const rows=[...C.items.map(x=>({...x,_kind:'道具',_title:x.name,_text:x.desc})),...C.missions.map(x=>({...x,_kind:'任务',_title:x.title,_text:x.cond_desc||x.desc}))];const render=list=>`<div class="apk-list">${list.slice(0,250).map(r=>`<article class="apk-list-item"><div class="apk-list-meta"><span class="apk-tag">${r._kind}</span><span class="apk-tag">ID ${r.type_id||r.id}</span></div><h3>${esc(r._title)}</h3><p>${nl(r._text)}</p></article>`).join('')}</div>${list.length>250?`<div class="apk-empty">结果较多，仅展示前 250 条，请继续输入关键词缩小范围。</div>`:''}`;main().innerHTML=pageHead('catalog')+`<div class="apk-tools"><input id="apkSearch" placeholder="搜索道具名称、任务名称或完成条件"><select id="apkKind"><option>全部</option><option>道具</option><option>任务</option></select><span class="apk-result-count" id="apkCount">${rows.length} 条</span></div><div id="apkResults">${render(rows)}</div>`;const apply=()=>{const q=$('#apkSearch').value.trim().toLowerCase(),kind=$('#apkKind').value;const list=rows.filter(r=>(kind==='全部'||r._kind===kind)&&(!q||JSON.stringify(r).toLowerCase().includes(q)));$('#apkResults').innerHTML=list.length?render(list):'<div class="apk-empty">没有匹配内容</div>';$('#apkCount').textContent=`${list.length} 条`;};$('#apkSearch').addEventListener('input',apply);$('#apkKind').addEventListener('change',apply);});}
 
   function renderApkRoute() {
-    const parts=route().split('/'); if(parts[0]!=='apk') return false;
+    const currentRoute=route();
+    const legacyHeroRoute=currentRoute==='category/英雄图鉴'||currentRoute.startsWith('category/英雄图鉴|');
+    const parts=currentRoute.split('/'); if(parts[0]!=='apk'&&!legacyHeroRoute) return false;
     addNav(); addStyles();
-    const view=parts[1]||'heroes';
+    const view=legacyHeroRoute?'heroes':(parts[1]||'heroes');
     if(view==='hero') heroDetail(parts[2]);
     else if(view==='heroes') renderHeroes();
     else if(view==='skills') renderSkills();
@@ -146,9 +164,9 @@
   }
 
   function apply() {
-    addStyles(); addNav();
+    addStyles(); addNav(); syncHeroCatalogLinks();
     if(renderApkRoute()) return;
-    setTimeout(()=>{addNav();enhanceHeroArticle();addHomeCallout();},30);
+    setTimeout(()=>{addNav();syncHeroCatalogLinks();enhanceHeroArticle();addHomeCallout();},30);
   }
   window.addEventListener('hashchange',()=>setTimeout(apply,0));
   document.addEventListener('DOMContentLoaded',()=>setTimeout(apply,0));
