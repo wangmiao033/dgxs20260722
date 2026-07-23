@@ -1,0 +1,40 @@
+name: Publish activity guide
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-activity-guide.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Attach activity guide to site
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          tag = '  <script src="/activity-guide.js?v=20260723-v9"></script>\n'
+          if '/activity-guide.js' not in text:
+              text = text.replace('</body>', tag + '</body>')
+              path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit production entry
+        run: |
+          if git diff --quiet; then
+            echo 'Activity guide already attached.'
+            exit 0
+          fi
+          git config user.name 'dgxs-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: publish APK activity guide to production site'
+          git push origin main
