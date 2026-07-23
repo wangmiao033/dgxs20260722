@@ -1,7 +1,6 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readdir, readFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 
-const STABLE = 'https://dgxs20260722-ccn675vj8-wangmiao033s-projects.vercel.app/';
 const HERO_PREVIEW = 'https://dgxs-hero-gallery-hq.vercel.app/';
 const BWIKI_PREVIEW = 'https://dgxs-v5-bwiki-layout-preview.vercel.app/';
 
@@ -23,15 +22,15 @@ function between(text, startMark, endMark) {
 }
 
 async function loadStablePage() {
-  const loader = await getText(STABLE);
-  const srcs = [...loader.matchAll(/<script[^>]+src=["']([^"']*payload-v2\/chunk-\d+\.js[^"']*)["']/g)]
-    .map((m) => new URL(m[1], STABLE).href);
-  if (!srcs.length) throw new Error('No stable payload chunks found');
+  const files = (await readdir('payload-v2'))
+    .filter((name) => /^chunk-\d+\.js$/.test(name))
+    .sort((a, b) => a.localeCompare(b, 'en'));
+  if (!files.length) throw new Error('No local payload-v2 chunks found');
 
-  const chunks = await Promise.all(srcs.map(async (url) => {
-    const js = await getText(url);
+  const chunks = await Promise.all(files.map(async (name) => {
+    const js = await readFile(`payload-v2/${name}`, 'utf8');
     const match = js.match(/\+"([A-Za-z0-9+/=]+)";/);
-    if (!match) throw new Error(`Invalid payload chunk: ${url}`);
+    if (!match) throw new Error(`Invalid payload chunk: ${name}`);
     return match[1];
   }));
 
