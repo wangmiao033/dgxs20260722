@@ -1,0 +1,40 @@
+name: Publish shop guide
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-shop-guide.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Attach shop guide to site
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          tag = '  <script src="/shop-guide.js?v=20260723-v10"></script>\n'
+          if '/shop-guide.js' not in text:
+              text = text.replace('</body>', tag + '</body>')
+              path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit production entry
+        run: |
+          if git diff --quiet; then
+            echo 'Shop guide already attached.'
+            exit 0
+          fi
+          git config user.name 'dgxs-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: publish APK shop guide to production site'
+          git push origin main
