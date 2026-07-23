@@ -1,0 +1,95 @@
+name: Build V5 static site
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-v5-static.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install browser
+        run: |
+          npm init -y
+          npm install playwright@1.52.0
+          npx playwright install --with-deps chromium
+
+      - name: Render V5 into a self-contained page
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+            const errors = [];
+            page.on('pageerror', e => errors.push(String(e)));
+            page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+
+            await page.goto('https://dgxs-v5-bwiki-layout-preview.vercel.app/#home', {
+              waitUntil: 'domcontentloaded',
+              timeout: 180000
+            });
+            await page.waitForSelector('.hero-wall-card', { timeout: 180000 });
+            await page.waitForTimeout(5000);
+
+            // Inline any remaining same-page CSS/JS resources before saving.
+            await page.evaluate(async () => {
+              for (const link of [...document.querySelectorAll('link[rel="stylesheet"][href]')]) {
+                try {
+                  const css = await (await fetch(link.href)).text();
+                  const style = document.createElement('style');
+                  style.textContent = css;
+                  link.replaceWith(style);
+                } catch (_) {}
+              }
+              for (const script of [...document.querySelectorAll('script[src]')]) {
+                try {
+                  const js = await (await fetch(script.src)).text();
+                  const inline = document.createElement('script');
+                  inline.textContent = js;
+                  script.replaceWith(inline);
+                } catch (_) {}
+              }
+            });
+
+            let html = await page.content();
+            html = html.replace(/<meta name="build"[^>]*>/g, '');
+            html = html.replace('</head>', '<meta name="build" content="v5-static-github-actions-20260723"></head>');
+            fs.writeFileSync('index.html', html, 'utf8');
+            fs.writeFileSync('snapshot-errors.txt', errors.join('\n'), 'utf8');
+            await browser.close();
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Validate snapshot
+        run: |
+          grep -q 'hero-wall-card' index.html
+          grep -q 'hero-archive' index.html
+          test $(wc -c < index.html) -gt 200000
+
+      - name: Commit generated static site
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -rf payload-v5 || true
+          git add index.html snapshot-errors.txt
+          git commit -m 'fix: publish self-contained V5 static site [skip ci]'
+          git push
