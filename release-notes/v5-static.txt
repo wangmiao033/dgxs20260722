@@ -1,0 +1,1 @@
+Self-contained V5 static release branch.
