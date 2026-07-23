@@ -91,45 +91,72 @@ img { max-width: 100%; display: block; }
 .brand small { color: #94a6bb; font-size: 12px; }
 .top-links { display: flex; gap: 22px; color: #c4ced9; font-size: 14px; }
 .top-links a:hover { color: white; }
-.game-download-btn {
+.download-center {
   flex: 0 0 auto;
-  min-width: 108px;
-  height: 38px;
-  padding: 0 17px;
+  height: 44px;
+  padding: 4px 5px 4px 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #2b4359;
+  border-radius: 10px;
+  background: #111e2c;
+  box-shadow: 0 5px 16px rgba(0,0,0,.2);
+}
+.download-center-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 60px;
+  line-height: 1.15;
+}
+.download-center-title strong {
+  color: #eff8ff;
+  font-size: 12px;
+  letter-spacing: .5px;
+}
+.download-center-title small {
+  margin-top: 3px;
+  color: #7f96ab;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.download-options {
+  height: 34px;
+  display: flex;
+  overflow: hidden;
+  border: 1px solid #355269;
+  border-radius: 7px;
+}
+.download-option {
+  min-width: 61px;
+  padding: 0 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  border: 1px solid rgba(255,255,255,.5);
-  border-radius: 9px;
-  color: #07223b;
-  background: linear-gradient(135deg, #73d7ff 0%, #35b7f2 48%, #f1c85d 100%);
-  box-shadow: 0 7px 20px rgba(32, 181, 241, .28);
-  font-size: 14px;
-  font-weight: 800;
+  gap: 5px;
+  color: #dcecf8;
+  background: #172b3d;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
-  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+  transition: color .18s ease, background .18s ease;
 }
-.game-download-btn::before {
+.download-option + .download-option { border-left: 1px solid #355269; }
+.download-option::before {
   content: "↓";
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  color: #65c7f5;
+  font-size: 13px;
+}
+.download-option:hover {
   color: #fff;
-  background: rgba(4, 61, 101, .72);
-  font-size: 14px;
-  line-height: 1;
+  background: #116fae;
 }
-.game-download-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 10px 26px rgba(32, 181, 241, .38);
-}
-.game-download-btn:focus-visible {
-  outline: 3px solid rgba(115, 215, 255, .38);
-  outline-offset: 3px;
+.download-option.android::before { content: "◆"; font-size: 9px; }
+.download-option:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid #72d1fb;
+  outline-offset: -2px;
 }
 .search-wrap {
   margin-left: auto;
@@ -846,14 +873,14 @@ img { max-width: 100%; display: block; }
 }
 @media (max-width: 940px) {
   .top-links { display: none; }
-  .search-wrap { width: min(420px, 55vw); }
+  .search-wrap { width: min(380px, 43vw); }
   .quick-grid { grid-template-columns: repeat(2, 1fr); }
   .hero-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .catalog-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .link-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
 }
 @media (max-width: 760px) {
-  body { padding-bottom: 78px; }
+  body { padding-bottom: 84px; }
   .topbar { height: 58px; }
   .topbar-inner { gap: 10px; padding: 0 12px; }
   .mobile-menu-btn { display: block; }
@@ -863,21 +890,35 @@ img { max-width: 100%; display: block; }
   .search-wrap { margin-left: auto; width: min(48vw, 290px); }
   .search-wrap kbd { display: none; }
   .search-wrap input { padding-right: 12px; }
-  .game-download-btn {
+  .download-center {
     position: fixed;
     z-index: 65;
     left: 50%;
     bottom: max(12px, env(safe-area-inset-bottom));
     width: min(360px, calc(100vw - 28px));
-    height: 52px;
-    border-radius: 14px;
-    font-size: 16px;
-    box-shadow: 0 10px 30px rgba(4, 44, 76, .3), 0 0 0 1px rgba(255,255,255,.5) inset;
+    height: 58px;
+    padding: 6px;
+    gap: 6px;
+    border-color: rgba(255,255,255,.35);
+    border-radius: 15px;
+    background: rgba(7,18,31,.95);
+    box-shadow: 0 12px 32px rgba(4, 30, 52, .34), 0 0 0 1px rgba(255,255,255,.06) inset;
+    backdrop-filter: blur(12px);
     transform: translateX(-50%);
   }
-  .game-download-btn:hover { transform: translateX(-50%) translateY(-1px); }
-  .game-download-btn::before { width: 24px; height: 24px; }
-  .back-top { bottom: 82px; }
+  .download-center-title { display: none; }
+  .download-options { width: 100%; height: 44px; border: 0; gap: 6px; }
+  .download-option {
+    flex: 1;
+    border: 0 !important;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, #138fda, #0873c5);
+    font-size: 14px;
+  }
+  .download-option.android { background: linear-gradient(135deg, #20ad86, #138c74); }
+  .download-option::before { color: #fff; }
+  .back-top { bottom: 88px; }
   .category-nav a { min-width: 112px; padding: 13px 14px; }
   .site-notice-inner { align-items: flex-start; }
   .page-shell { display: block; padding: 12px 10px 30px; }
@@ -1409,7 +1450,13 @@ img { max-width: 100%; display: block; }
           <a href="#about">关于本站</a>
           <a href="#favorites">我的收藏</a>
         </div>
-        <a class="game-download-btn" href="https://l.taptap.cn/gqefv4ns" target="_blank" rel="noopener noreferrer" aria-label="前往 TapTap 下载帝国雄狮">下载游戏</a>
+        <div class="download-center" aria-label="帝国雄狮客户端下载">
+          <span class="download-center-title"><strong>客户端下载</strong><small>选择设备版本</small></span>
+          <div class="download-options">
+            <a class="download-option pc" href="https://l.taptap.cn/gqefv4ns" target="_blank" rel="noopener noreferrer" aria-label="下载帝国雄狮PC版">PC版</a>
+            <a class="download-option android" href="https://l.taptap.cn/MrAd4pe6?channel=rep-rep_szzaqbtgpn1" target="_blank" rel="noopener noreferrer" aria-label="下载帝国雄狮安卓手机版">安卓版</a>
+          </div>
+        </div>
         <div class="search-wrap">
           <span class="search-icon">⌕</span>
           <input id="globalSearch" type="search" autocomplete="off" placeholder="搜索英雄、技能、玩法、功能解锁…" aria-label="搜索百科">
