@@ -1,0 +1,58 @@
+name: Publish APK guide V6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-apk-v6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download verified V6 release package
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2 \
+            'https://at.adobe.com/kJ0eHNEfYIp8GL8X' \
+            --output /tmp/dgxs-v6.zip
+          unzip -q /tmp/dgxs-v6.zip -d /tmp/dgxs-v6
+
+      - name: Validate release package
+        run: |
+          set -euo pipefail
+          test -s /tmp/dgxs-v6/index.html
+          test -s /tmp/dgxs-v6/apk-guide-data.js
+          test -s /tmp/dgxs-v6/apk-guide-catalog.js
+          test -s /tmp/dgxs-v6/apk-guide-plugin.js
+          test -s /tmp/dgxs-v6/vercel.json
+          grep -q 'apk-guide-data.js' /tmp/dgxs-v6/index.html
+          grep -q 'apk-guide-plugin.js' /tmp/dgxs-v6/index.html
+          grep -q 'window.APK_GUIDE_DATA' /tmp/dgxs-v6/apk-guide-data.js
+          grep -q 'window.APK_GUIDE_CATALOG' /tmp/dgxs-v6/apk-guide-catalog.js
+          grep -q '76' /tmp/dgxs-v6/apk-guide-data.js
+          test $(wc -c < /tmp/dgxs-v6/index.html) -gt 1400000
+
+      - name: Publish static files
+        run: |
+          set -euo pipefail
+          cp /tmp/dgxs-v6/index.html ./index.html
+          cp /tmp/dgxs-v6/apk-guide-data.js ./apk-guide-data.js
+          cp /tmp/dgxs-v6/apk-guide-catalog.js ./apk-guide-catalog.js
+          cp /tmp/dgxs-v6/apk-guide-plugin.js ./apk-guide-plugin.js
+          cp /tmp/dgxs-v6/vercel.json ./vercel.json
+          rm -f .github/workflows/publish-apk-v6.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html apk-guide-data.js apk-guide-catalog.js apk-guide-plugin.js vercel.json .github/workflows/publish-apk-v6.yml
+          git commit -m 'feat: publish APK guide database V6 [skip ci]'
+          git push
