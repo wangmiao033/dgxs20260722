@@ -1,0 +1,84 @@
+name: Publish Complete V5 Static Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v5-manual.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download complete static site
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-delay 3 \
+            'https://at.adobe.com/62td2H9qPBekca8O' \
+            --output /tmp/dgxs-v5-index.html
+
+      - name: Validate complete hero build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(wc -c < /tmp/dgxs-v5-index.html)" -gt 1400000
+          grep -q 'const HERO_ASSETS' /tmp/dgxs-v5-index.html
+          grep -q '"索尔"' /tmp/dgxs-v5-index.html
+          grep -q '"亚瑟"' /tmp/dgxs-v5-index.html
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+          text = Path('/tmp/dgxs-v5-index.html').read_text(encoding='utf-8')
+          m = re.search(r'const HERO_ASSETS\s*=\s*(\{.*?\});', text, re.S)
+          if not m:
+              raise SystemExit('HERO_ASSETS not found')
+          heroes = json.loads(m.group(1))
+          if len(heroes) != 24:
+              raise SystemExit(f'Expected 24 mapped heroes, found {len(heroes)}')
+          image_count = len(re.findall(r'data:image/[^;]+;base64,', text))
+          if image_count < 50:
+              raise SystemExit(f'Expected at least 50 embedded images, found {image_count}')
+          print(f'Validated {len(heroes)} heroes and {image_count} embedded images')
+          PY
+
+      - name: Replace old deployment chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/dgxs-v5-index.html index.html
+          rm -f build.mjs package.json snapshot-errors.txt
+          rm -f .github/workflows/build-v5-static.yml
+          cat > vercel.json <<'JSON'
+          {
+            "cleanUrls": true,
+            "headers": [
+              {
+                "source": "/(.*)",
+                "headers": [
+                  {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                  }
+                ]
+              }
+            ]
+          }
+          JSON
+
+      - name: Commit complete V5 site
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: publish complete 24-hero static wiki [skip ci]'
+          git push
