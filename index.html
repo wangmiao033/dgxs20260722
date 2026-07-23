@@ -1903,7 +1903,6 @@ window.WIKI_DATA = {"meta":{"siteName":"帝国雄狮攻略百科","gameName":"�
         </div>
       </section>
       ${statStrip()}
-      ${section("APK 实景素材", "▥", `<div class="apk-preview-grid">${APK_VISUALS.slice(0,4).map(x => `<a class="apk-preview-card" href="#apk-gallery|${x.id}"><img src="${x.file}" alt="${escapeHTML(x.title)}"><div><strong>${escapeHTML(x.title)}</strong><small>${escapeHTML(x.desc)}</small></div></a>`).join("")}</div>`, "#apk-gallery")}
       ${section("玩家决策工具", "⌘", `
         <div class="quick-grid deep-quick-grid">
           <a class="quick-card" href="#roadmap"><span class="quick-icon">➤</span><strong>七日开荒</strong><small>按阶段整理目标、资源和玩法入口</small></a>
