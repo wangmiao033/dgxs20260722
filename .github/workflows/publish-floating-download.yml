@@ -1,0 +1,40 @@
+name: Publish floating download widget
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-floating-download.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Attach floating download widget
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          tag = '  <script src="/floating-download.js?v=20260803-v1"></script>\n'
+          if '/floating-download.js' not in text:
+              text = text.replace('</body>', tag + '</body>')
+              path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit production entry
+        run: |
+          if git diff --quiet; then
+            echo 'Floating download widget already attached.'
+            exit 0
+          fi
+          git config user.name 'dgxs-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: publish floating download widget'
+          git push origin main
